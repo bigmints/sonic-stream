@@ -1,0 +1,7 @@
+{
+  "name": "SyncStream Broadcaster",
+  "description": "A high-precision audio broadcasting app that synchronizes playback across multiple devices in real-time.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
