@@ -4,26 +4,25 @@ import { Track } from './types';
 export const SAMPLE_TRACKS: Track[] = [
   {
     id: '1',
-    title: 'Midnight City Beats',
-    artist: 'Lofi Girl',
+    title: 'Digital Horizon',
+    artist: 'SyncStream Alpha',
     url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    cover: 'https://picsum.photos/seed/music1/400/400'
+    cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=800&h=800'
   },
   {
     id: '2',
-    title: 'Summer Breeze',
-    artist: 'Chill Masters',
+    title: 'Neural Pulse',
+    artist: 'SyncStream Beta',
     url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    cover: 'https://picsum.photos/seed/music2/400/400'
+    cover: 'https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&q=80&w=800&h=800'
   },
   {
     id: '3',
-    title: 'Neon Horizon',
-    artist: 'SynthWave Pro',
+    title: 'Cyber Drift',
+    artist: 'SyncStream Gamma',
     url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    cover: 'https://picsum.photos/seed/music3/400/400'
+    cover: 'https://images.unsplash.com/photo-1459749411177-042180ce673c?auto=format&fit=crop&q=80&w=800&h=800'
   }
 ];
 
-export const SYNC_CHANNEL_NAME = 'sync_stream_broadcast_v1';
-export const SYNC_INTERVAL_MS = 1000;
+export const SYNC_INTERVAL_MS = 400; 

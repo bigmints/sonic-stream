@@ -20,7 +20,9 @@ export interface SyncState {
   volume: number;
 }
 
+export type MessageType = 'SYNC_UPDATE' | 'TRACK_CHANGE' | 'PLAY_STATE_CHANGE' | 'SEEK' | 'COMMAND';
+
 export interface Message {
-  type: 'SYNC_UPDATE' | 'COMMAND';
+  type: MessageType;
   payload: any;
 }

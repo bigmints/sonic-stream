@@ -1,45 +1,114 @@
 
-import { SyncState, Message } from '../types';
-import { SYNC_CHANNEL_NAME } from '../constants';
+import { SyncState, Message, MessageType } from '../types';
+
+declare const Peer: any;
 
 class SyncService {
-  private channel: BroadcastChannel;
-  private onMessageCallback: ((msg: Message) => void) | null = null;
+  private peer: any = null;
+  private connections: any[] = [];
+  private onMessageCallback: ((msg: Message, conn: any) => void) | null = null;
+  private onConnectionChangeCallback: ((count: number) => void) | null = null;
+  public peerId: string | null = null;
 
-  constructor() {
-    this.channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
-    this.channel.onmessage = (event) => {
-      if (this.onMessageCallback) {
-        this.onMessageCallback(event.data);
+  public async init(): Promise<string> {
+    if (this.peer) return this.peerId!;
+
+    return new Promise((resolve, reject) => {
+      this.peer = new Peer();
+
+      this.peer.on('open', (newId: string) => {
+        this.peerId = newId;
+        resolve(newId);
+      });
+
+      this.peer.on('connection', (conn: any) => {
+        this.setupConnection(conn);
+      });
+
+      this.peer.on('error', (err: any) => {
+        console.error('Peer error:', err);
+        reject(err);
+      });
+    });
+  }
+
+  public connectTo(targetId: string) {
+    if (!this.peer) return;
+    const conn = this.peer.connect(targetId, { reliable: true });
+    this.setupConnection(conn);
+  }
+
+  private setupConnection(conn: any) {
+    conn.on('open', () => {
+      if (!this.connections.find(c => c.peer === conn.peer)) {
+        this.connections.push(conn);
+        this.notifyConnectionChange();
       }
-    };
+      // Notify the other side that we're ready
+      conn.send({ type: 'COMMAND', payload: { action: 'REQUEST_INITIAL_SYNC' } });
+    });
+
+    conn.on('data', (data: any) => {
+      if (this.onMessageCallback) {
+        this.onMessageCallback(data as Message, conn);
+      }
+    });
+
+    conn.on('close', () => {
+      this.connections = this.connections.filter(c => c !== conn);
+      this.notifyConnectionChange();
+    });
+
+    conn.on('error', (err: any) => {
+       console.error("Connection error:", err);
+       this.connections = this.connections.filter(c => c !== conn);
+       this.notifyConnectionChange();
+    });
+  }
+
+  private notifyConnectionChange() {
+    if (this.onConnectionChangeCallback) {
+      this.onConnectionChangeCallback(this.connections.length);
+    }
+  }
+
+  public broadcast(type: MessageType, payload: any) {
+    const message: Message = { type, payload };
+    this.connections.forEach(conn => {
+      if (conn.open) {
+        conn.send(message);
+      }
+    });
   }
 
   public broadcastState(state: SyncState) {
-    const message: Message = {
-      type: 'SYNC_UPDATE',
-      payload: {
-        ...state,
-        serverTimestamp: Date.now(),
-      }
-    };
-    this.channel.postMessage(message);
-    
-    // Also persist to localStorage for new clients joining late
-    localStorage.setItem('sync_stream_current_state', JSON.stringify(message.payload));
+    this.broadcast('SYNC_UPDATE', {
+      ...state,
+      serverTimestamp: Date.now(),
+    });
   }
 
-  public onMessage(callback: (msg: Message) => void) {
+  public sendTo(conn: any, message: Message) {
+    if (conn.open) {
+      conn.send(message);
+    }
+  }
+
+  public onMessage(callback: (msg: Message, conn: any) => void) {
     this.onMessageCallback = callback;
   }
 
-  public getPersistedState(): SyncState | null {
-    const saved = localStorage.getItem('sync_stream_current_state');
-    return saved ? JSON.parse(saved) : null;
+  public onConnectionChange(callback: (count: number) => void) {
+    this.onConnectionChangeCallback = callback;
   }
 
   public cleanup() {
-    this.channel.close();
+    if (this.peer) {
+      this.peer.destroy();
+      this.peer = null;
+    }
+    this.connections = [];
+    this.peerId = null;
   }
 }
 

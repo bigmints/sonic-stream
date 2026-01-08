@@ -6,16 +6,22 @@ import ClientView from './components/ClientView';
 
 const App: React.FC = () => {
   const [role, setRole] = useState<SessionRole | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash.includes('broadcast')) {
+      const parts = hash.split('/');
+      
+      if (parts[0] === '#broadcast') {
         setRole(SessionRole.BROADCASTER);
-      } else if (hash.includes('client')) {
+        setRoomId(parts[1] || null);
+      } else if (parts[0] === '#client') {
         setRole(SessionRole.CLIENT);
+        setRoomId(parts[1] || null);
       } else {
         setRole(null);
+        setRoomId(null);
       }
     };
 
@@ -33,7 +39,7 @@ const App: React.FC = () => {
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">SyncStream</h1>
           <p className="text-lg text-slate-300">
-            Broadcasting media to multiple devices with high-precision synchronization.
+            Broadcasting media to multiple devices with high-precision synchronization via WebRTC.
           </p>
         </div>
 
@@ -62,13 +68,13 @@ const App: React.FC = () => {
         </div>
 
         <p className="text-xs text-slate-500 mt-12 uppercase tracking-widest font-semibold">
-          Mobile First • Zero Latency • HD Audio
+          WebRTC Powered • Cross-Device • Low Latency
         </p>
       </div>
     );
   }
 
-  return role === SessionRole.BROADCASTER ? <BroadcasterView /> : <ClientView />;
+  return role === SessionRole.BROADCASTER ? <BroadcasterView /> : <ClientView roomId={roomId} />;
 };
 
 export default App;
